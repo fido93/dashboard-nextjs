@@ -2,7 +2,7 @@
 import { useSession } from "next-auth/react";
 import { setUsersList } from "@/redux/features/getUserSlice";
 import { store } from "@/redux/store";
-import { Button, Table } from "antd";
+import { Avatar, Button, Table } from "antd";
 import { useState } from "react";
 
 const TableUsers = ({ usersData, perPage, totalPage }) => {
@@ -22,6 +22,11 @@ const TableUsers = ({ usersData, perPage, totalPage }) => {
   };
 
   const columns = [
+    {
+      title: "Profile Image",
+      dataIndex: "avatar",
+      render: (avatar) => <Avatar src={avatar} />,
+    },
     {
       key: "first_name",
       title: "First Name",
