@@ -1,19 +1,30 @@
 "use client";
 import { useSession } from "next-auth/react";
-import { setUsersList } from "@/redux/features/getUserSlice";
+import {
+  selectShowEmails,
+  setUsersList,
+  toggleEmail,
+} from "@/redux/features/getUserSlice";
 import { store } from "@/redux/store";
 import { Avatar, Button, Table } from "antd";
 import { useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
 
 const TableUsers = ({ usersData, perPage, totalPage }) => {
   const [dataSource, setDataSource] = useState(usersData);
-  const [showEmails, setShowEmails] = useState({});
+  //const [showEmails, setShowEmails] = useState({});
   const totalPages = perPage;
   const recordDisplay = usersData.length;
   const { data: session } = useSession();
+  const showEmails = useSelector(selectShowEmails) || {};
+  const dispatch = useDispatch();
 
-  const toggleEmail = (id) => {
-    setShowEmails((prevState) => ({ ...prevState, [id]: !prevState[id] }));
+  // const maskEmail = (email) => {
+  //   dispatch(maskEmail(email));
+  // };
+
+  const handleToggleEmail = (id) => {
+    dispatch(toggleEmail(id));
   };
 
   const maskEmail = (email) => {
@@ -49,7 +60,7 @@ const TableUsers = ({ usersData, perPage, totalPage }) => {
       title: "Action",
       key: "action",
       render: (text, record) => (
-        <Button onClick={() => toggleEmail(record.id)}>
+        <Button onClick={() => handleToggleEmail(record.id)}>
           {showEmails[record.id] ? "Hide" : "Show"}
         </Button>
       ),

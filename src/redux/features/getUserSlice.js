@@ -4,6 +4,7 @@ const initialState = {
   loading: false,
   usersList: [],
   error: "",
+  showEmails: {},
 };
 
 const searchSlice = createSlice({
@@ -27,8 +28,13 @@ const searchSlice = createSlice({
         state.total = action.payload.total;
       }
     },
+    toggleEmail: (state, action) => {
+      const id = action.payload;
+      state.showEmails[id] = !state.showEmails[id];
+    },
   },
 });
 
-export const { setUsersList } = searchSlice.actions;
+export const { setUsersList, toggleEmail } = searchSlice.actions;
+export const selectShowEmails = (state) => state.search.showEmails;
 export default searchSlice.reducer;

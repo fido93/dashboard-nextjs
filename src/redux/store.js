@@ -13,6 +13,7 @@ const authPersistConfig = {
 
 const rootReducer = combineReducers({
   auth: persistReducer(authPersistConfig, authReducer),
+  userlist: searchReducer,
 });
 
 export const store = configureStore({
