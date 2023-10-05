@@ -1,36 +1,30 @@
 "use client";
 import { useSession } from "next-auth/react";
-import { useState, useEffect } from "react";
-import styles from "../page.module.css";
+import {
+  selectShowEmails,
+  setUsersList,
+  toggleEmail,
+} from "@/redux/features/getUserSlice";
+import { store } from "@/redux/store";
+import { Avatar, Button, Table } from "antd";
+import { useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
 
-function TableUsers() {
-  const [users, setUsers] = useState([]);
-  const [showEmails, setShowEmails] = useState({});
+const TableUsers = ({ usersData, perPage, totalPage }) => {
+  const [dataSource, setDataSource] = useState(usersData);
+  //const [showEmails, setShowEmails] = useState({});
+  const totalPages = perPage;
+  const recordDisplay = usersData.length;
   const { data: session } = useSession();
+  const showEmails = useSelector(selectShowEmails) || {};
+  const dispatch = useDispatch();
 
-  useEffect(() => {
-    if (session && session.user) {
-      fetchUsers();
-    }
-  }, [session]);
+  // const maskEmail = (email) => {
+  //   dispatch(maskEmail(email));
+  // };
 
-  const fetchUsers = async () => {
-    let allUsers = [];
-
-    const response = await fetch(`https://reqres.in/api/users`);
-    const data = await response.json();
-
-    allUsers = allUsers.concat(data.data);
-
-    const filteredUsers = allUsers.filter(
-      (user) =>
-        user.first_name.startsWith("G") || user.last_name.startsWith("W")
-    );
-    setUsers(filteredUsers);
-  };
-
-  const toggleEmail = (id) => {
-    setShowEmails((prevState) => ({ ...prevState, [id]: !prevState[id] }));
+  const handleToggleEmail = (id) => {
+    dispatch(toggleEmail(id));
   };
 
   const maskEmail = (email) => {
@@ -38,42 +32,66 @@ function TableUsers() {
     return `${user[0]}***@${domain}`;
   };
 
+  const columns = [
+    {
+      title: "Profile Image",
+      dataIndex: "avatar",
+      render: (avatar) => <Avatar src={avatar} />,
+    },
+    {
+      key: "first_name",
+      title: "First Name",
+      dataIndex: "first_name",
+    },
+    {
+      key: "last_name",
+      title: "Last Name",
+      dataIndex: "last_name",
+    },
+    {
+      key: "email",
+      title: "Email",
+      dataIndex: "email",
+      render: (text, record) => {
+        return showEmails[record.id] ? text : maskEmail(text);
+      },
+    },
+    {
+      title: "Action",
+      key: "action",
+      render: (text, record) => (
+        <Button onClick={() => handleToggleEmail(record.id)}>
+          {showEmails[record.id] ? "Hide" : "Show"}
+        </Button>
+      ),
+    },
+  ];
+
+  const fetchRecords = async (pageno) => {
+    const req = await fetch(`https://reqres.in/api/users?page=${pageno}`);
+    const datax = await req.json();
+    store.dispatch(setUsersList(datax));
+    setDataSource(store.getState().search.usersList);
+  };
+
   return (
     <>
       {session && session.user ? (
-        <div className={styles.center}>
-          <div>
-            <table>
-              <thead>
-                <tr>
-                  <th>First Name</th>
-                  <th>Last Name</th>
-                  <th>Email</th>
-                  <th>Action</th>
-                </tr>
-              </thead>
-              <tbody>
-                {users.map((user) => (
-                  <tr key={user.id}>
-                    <td>{user.first_name}</td>
-                    <td>{user.last_name}</td>
-                    <td>
-                      {showEmails[user.id] ? user.email : maskEmail(user.email)}
-                    </td>
-                    <td>
-                      <button onClick={() => toggleEmail(user.id)}>
-                        {showEmails[user.id] ? "Hide" : "Show"}
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
+        <Table
+          columns={columns}
+          dataSource={dataSource}
+          rowKey="id"
+          pagination={{
+            pageSize: recordDisplay,
+            total: totalPages,
+            onChange: (page) => {
+              fetchRecords(page);
+            },
+          }}
+        ></Table>
       ) : null}
     </>
   );
-}
+};
 
 export default TableUsers;
